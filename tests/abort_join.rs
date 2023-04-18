@@ -14,7 +14,7 @@ mod abort_join {
     #[tokio::test]
     async fn returns_error_on_request() {
         const NUMBER: i32 = 6;
-        let actor_handle = run_actor(TestActor {}, 1);
+        let actor_handle = run_actor(TestActor::default(), 1);
 
         actor_handle.abort();
 
@@ -26,7 +26,7 @@ mod abort_join {
     #[tokio::test]
     async fn joins_before_a_timeout() {
         const NUMBER: i32 = 6;
-        let actor_handle = run_actor(TestActor {}, 1);
+        let actor_handle = run_actor(TestActor::default(), 1);
 
         actor_handle.abort();
 
