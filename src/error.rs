@@ -1,7 +1,11 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// The types of errors that this crate could indicate
 pub enum Error {
+    /// A problem was encounted during `send()`ing of the request
     RequestError(String),
+    /// An error was encounted while waiting for the response from the `Actor` instance.
     ResponseError(String),
+    /// A problem was encounted in sending an event
     EventError(String),
 }
 
