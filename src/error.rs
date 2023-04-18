@@ -2,6 +2,7 @@
 pub enum Error {
     RequestError(String),
     ResponseError(String),
+    EventError(String),
 }
 
 impl std::fmt::Display for Error {
@@ -9,7 +10,7 @@ impl std::fmt::Display for Error {
         use Error::*;
 
         let display = match self {
-            RequestError(ref s) | ResponseError(ref s) => s,
+            RequestError(ref s) | ResponseError(ref s) | EventError(ref s) => s,
         };
         write!(f, "{}", display)
     }
