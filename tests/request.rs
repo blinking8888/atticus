@@ -30,7 +30,6 @@ mod request {
 
     #[tokio::test]
     async fn respond_with_none() {
-        const NUMBER: i32 = 6;
         let actor_handle = run_actor(TestActor {}, 1);
         let response = actor_handle
             .requestor
@@ -38,5 +37,25 @@ mod request {
             .await
             .unwrap();
         assert_eq!(response, None);
+    }
+
+    #[tokio::test]
+    async fn multiple_requestors() {
+        const NUMBER: i32 = 6;
+        let actor_handle = run_actor(TestActor {}, 1);
+
+        let requestor2 = actor_handle.requestor.clone();
+
+        let req2 =
+            tokio::spawn(async move { requestor2.request(Message::AddOne(NUMBER)).await.unwrap() });
+
+        let response = actor_handle
+            .requestor
+            .request(Message::Echo("ping!".to_string()))
+            .await
+            .unwrap();
+
+        assert_eq!(response, Some(ResponseMsg::Echo("ping!".to_string())));
+        assert_eq!(req2.await.unwrap(), Some(ResponseMsg::Number(7)));
     }
 }
