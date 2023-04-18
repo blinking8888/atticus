@@ -5,12 +5,13 @@ use tokio::{
 
 use crate::error::Error;
 
-pub struct Requestor<T>(
-    mpsc::Sender<(
-        <T as Actor>::Request,
-        oneshot::Sender<Option<<T as Actor>::Response>>,
-    )>,
-)
+type Request<T> = <T as Actor>::Request;
+type Response<T> = <T as Actor>::Response;
+type RequestMessage<T> = (Request<T>, oneshot::Sender<OptionalResponse<T>>);
+type RequestResult<T> = Result<Option<Response<T>>, Error>;
+type OptionalResponse<T> = Option<Response<T>>;
+
+pub struct Requestor<T>(mpsc::Sender<RequestMessage<T>>)
 where
     T: Actor + Sized,
     <T as Actor>::Request: Send;
@@ -31,11 +32,8 @@ where
     <T as Actor>::Request: Send,
     <T as Actor>::Response: Send,
 {
-    pub async fn request(
-        &self,
-        request: <T as Actor>::Request,
-    ) -> Result<Option<<T as Actor>::Response>, Error> {
-        let (rsp_tx, rsp_rx) = oneshot::channel::<Option<<T as Actor>::Response>>();
+    pub async fn request(&self, request: Request<T>) -> RequestResult<T> {
+        let (rsp_tx, rsp_rx) = oneshot::channel::<OptionalResponse<T>>();
         self.0
             .send((request, rsp_tx))
             .await
@@ -84,10 +82,7 @@ where
     <T as Actor>::Request: Send,
     <T as Actor>::Response: Send,
 {
-    let (tx, mut rx) = mpsc::channel::<(
-        <T as Actor>::Request,
-        oneshot::Sender<Option<<T as Actor>::Response>>,
-    )>(buffer);
+    let (tx, mut rx) = mpsc::channel::<RequestMessage<T>>(buffer);
 
     let handle = tokio::spawn(async move {
         while let Some((msg, rsp_tx)) = rx.recv().await {
