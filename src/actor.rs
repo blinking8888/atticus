@@ -47,11 +47,9 @@ where
         self.0
             .send((request, Some(rsp_tx)))
             .await
-            .map_err(|e| Error::RequestError(e.to_string()))?;
+            .map_err(|_e| Error::RequestError)?;
 
-        rsp_rx
-            .await
-            .map_err(|e| Error::ResponseError(e.to_string()))
+        rsp_rx.await.map_err(|_e| Error::ResponseError)
     }
 
     /// Sends an event to the [Actor] instance and does not wait for a response.
@@ -64,7 +62,7 @@ where
             sender
                 .send((event, None))
                 .await
-                .map_err(|e| Error::EventError(e.to_string()))
+                .map_err(|_e| Error::EventError)
         })
     }
 }
