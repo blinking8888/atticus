@@ -44,5 +44,5 @@ pub mod actor;
 /// Defines the error types that this crate provides.
 pub mod error;
 
-pub use actor::{run_actor, Actor};
+pub use actor::{run_actor, Actor, Requestor};
 pub use error::Error;
