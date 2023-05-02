@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+
 use tokio::{
     sync::{mpsc, oneshot},
     task::JoinHandle,
@@ -101,6 +103,7 @@ where
 }
 
 /// This is the trait to create an `Actor` instance.
+#[async_trait]
 pub trait Actor: Send + 'static {
     /// The type of the request that the `Actor` could process.
     type Request;
@@ -110,7 +113,7 @@ pub trait Actor: Send + 'static {
 
     /// Method to handle the `Request` and expects to return an optional response.
     /// Return None if there really is a reason or data to return the requestor
-    fn handle(&mut self, message: Self::Request) -> Option<Self::Response>;
+    async fn handle(&mut self, message: Self::Request) -> Option<Self::Response>;
 }
 
 /// Spawns an [Actor] instance message handling loop.
@@ -128,7 +131,7 @@ where
 
     let handle = tokio::spawn(async move {
         while let Some((msg, rsp_tx)) = rx.recv().await {
-            let response = actor.handle(msg);
+            let response = actor.handle(msg).await;
             if let Some(rsp_tx) = rsp_tx {
                 let _ = rsp_tx.send(response);
             }
