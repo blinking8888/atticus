@@ -10,13 +10,15 @@
 //!
 //! ```rust
 //! use simple_actor::Actor;
+//! use async_trait::async_trait;
 //!
 //! struct IntToString;
 //!
+//! #[async_trait]
 //! impl Actor for IntToString {
 //!    type Request = i32;
 //!    type Response = String;
-//!    fn handle(&mut self, request: Self::Request) -> Option<Self::Response> {
+//!    async fn handle(&mut self, request: Self::Request) -> Option<Self::Response> {
 //!        Some(request.to_string())
 //!    }
 //! }

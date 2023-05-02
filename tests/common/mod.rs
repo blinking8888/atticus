@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use simple_actor::Actor;
 
 #[derive(Default)]
@@ -21,11 +22,12 @@ pub enum ResponseMsg {
     LastRequest(Option<Message>),
 }
 
+#[async_trait]
 impl Actor for TestActor {
     type Request = Message;
     type Response = ResponseMsg;
 
-    fn handle(&mut self, message: Self::Request) -> Option<Self::Response> {
+    async fn handle(&mut self, message: Self::Request) -> Option<Self::Response> {
         use Message::*;
 
         println!("handling message");
