@@ -1,5 +1,11 @@
 [package]
 name = "atticus"
+description = "A mimimal API to create asynchronous actors"
+repository = "https://github.com/blinking8888/atticus"
+readme = "README.md"
+keywords = [ "async", "actor", "channel", "tokio" ]
+categories = [ "asynchronous", "concurrency"  ]
+license = "MIT OR Apache-2.0"
 version = "0.1.0"
 edition = "2021"
 
