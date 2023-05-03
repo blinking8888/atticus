@@ -14,4 +14,4 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1.68"
 thiserror = "1.0.40"
-tokio = { version = "1.20", features = ["rt", "test-util", "tokio-macros", "macros"] }
+tokio = { version = "1", features = ["rt", "test-util", "tokio-macros", "macros"] }
