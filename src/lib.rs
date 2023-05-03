@@ -1,4 +1,4 @@
-//! simple-actor: A simple implementation of an actor in Tokio.
+//! atticus: A simple implementation of an actor in Tokio.
 //!
 //! Actors provide a way to invoke messages or requests among asynchronous tasks.  This avoids the
 //! need to use `Arc<Mutex<T>>` instances of an object to be passed around so shared state can be
@@ -9,7 +9,7 @@
 //! Create an actor by implementing the [Actor] trait.
 //!
 //! ```rust
-//! use simple_actor::Actor;
+//! use atticus::Actor;
 //! use async_trait::async_trait;
 //!
 //! struct IntToString;
@@ -26,7 +26,7 @@
 //! #[tokio::main(flavor="current_thread")]
 //! async fn main() {
 //!    // Spawn using [run_actor]
-//!    let handle = simple_actor::run_actor(IntToString{}, 1);
+//!    let handle = atticus::run_actor(IntToString{}, 1);
 //!
 //!    // Send a request to convert 5 to String.
 //!    let response = handle.requestor.request(5).await;

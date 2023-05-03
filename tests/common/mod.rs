@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use simple_actor::Actor;
+use atticus::Actor;
 
 #[derive(Default)]
 pub struct TestActor {

@@ -7,7 +7,7 @@ mod abort_join {
         time::Duration,
     };
 
-    use simple_actor::run_actor;
+    use atticus::run_actor;
 
     use super::common::*;
 
