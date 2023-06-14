@@ -22,7 +22,7 @@ pub type OptionalResponse<T> = Option<Response<T>>;
 /// requests to the [Actor]
 pub struct Requestor<T>(mpsc::Sender<RequestMessage<T>>)
 where
-    T: Actor + Sized,
+    T: Actor,
     <T as Actor>::Request: Send;
 
 impl<T> Clone for Requestor<T>
@@ -37,7 +37,7 @@ where
 
 impl<T> Requestor<T>
 where
-    T: Actor + Sized,
+    T: Actor,
     <T as Actor>::Request: Send,
     <T as Actor>::Response: Send,
 {
@@ -75,7 +75,7 @@ where
 /// clients to send requests to the `Actor`.
 pub struct Handle<T>
 where
-    T: Actor + Sized,
+    T: Actor,
     <T as Actor>::Request: Send,
     <T as Actor>::Response: Send,
 {
@@ -87,7 +87,7 @@ where
 
 impl<T> Handle<T>
 where
-    T: Actor + Sized,
+    T: Actor,
     <T as Actor>::Request: Send,
     <T as Actor>::Response: Send,
 {
@@ -123,7 +123,7 @@ pub trait Actor: Send + 'static {
 /// This method returns a [Handle] to control and send requests or events to the `Actor` instance.
 pub fn run_actor<T>(mut actor: T, buffer: usize) -> Handle<T>
 where
-    T: Actor + Sized + Send,
+    T: Actor + Send,
     <T as Actor>::Request: Send,
     <T as Actor>::Response: Send,
 {
