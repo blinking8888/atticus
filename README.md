@@ -34,7 +34,7 @@ impl Actor for IntToString {
 
 #[tokio::main(flavor="current_thread")]
 async fn main() {
-    // Spawn using [actor::run]
+    // Spawn the actor
     let handle = run_actor(IntToString{}, 1);
 
     // Send a request to convert 5 to String.
