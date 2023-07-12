@@ -7,45 +7,35 @@ use tokio::{
 
 use crate::error::Error;
 
-/// Shorthand for the [Actor] Request type
-pub type Request<T> = <T as Actor>::Request;
-/// Shorthand for the [Actor] Response type
-pub type Response<T> = <T as Actor>::Response;
-/// Shorthand for the tuple containing the Request and response channel (oneshot)
-pub type RequestMessage<T> = (Request<T>, Option<oneshot::Sender<OptionalResponse<T>>>);
 /// This is returned by the [Requestor::request] method to indicate the result of the request.
-pub type RequestResult<T> = Result<Option<Response<T>>, Error>;
-/// Shorthand for an `Option<Response<T>`
-pub type OptionalResponse<T> = Option<Response<T>>;
+pub type RequestResult<Rsp> = Result<Option<Rsp>, Error>;
+
+type OptionalResponder<Rsp> = Option<oneshot::Sender<Option<Rsp>>>;
 
 /// A [Requestor] can be passed around by cloning it so multiple requestors can send
 /// requests to the [Actor]
-pub struct Requestor<T>(mpsc::Sender<RequestMessage<T>>)
-where
-    T: Actor,
-    <T as Actor>::Request: Send;
+#[repr(transparent)]
+pub struct Requestor<Req, Rsp>(mpsc::Sender<(Req, OptionalResponder<Rsp>)>);
 
-impl<T> Clone for Requestor<T>
+impl<Req, Rsp> Clone for Requestor<Req, Rsp>
 where
-    T: Actor,
-    <T as Actor>::Request: Send,
+    Req: Send,
 {
     fn clone(&self) -> Self {
         Requestor(self.0.clone())
     }
 }
 
-impl<T> Requestor<T>
+impl<Req, Rsp> Requestor<Req, Rsp>
 where
-    T: Actor,
-    <T as Actor>::Request: Send,
-    <T as Actor>::Response: Send,
+    Req: Send + 'static,
+    Rsp: Send + 'static,
 {
     /// Send a request message to the [Actor] instance and expecting a response.
     /// The return is a [RequestResult] to indicate if request was successfully sent.
     /// Check the [Error] module for the types of errors that can be thrown.
-    pub async fn request(&self, request: Request<T>) -> RequestResult<T> {
-        let (rsp_tx, rsp_rx) = oneshot::channel::<OptionalResponse<T>>();
+    pub async fn request(&self, request: Req) -> RequestResult<Rsp> {
+        let (rsp_tx, rsp_rx) = oneshot::channel::<Option<Rsp>>();
         self.0
             .send((request, Some(rsp_tx)))
             .await
@@ -58,7 +48,7 @@ where
     /// `send_event` returns a JoinHandle to allow the caller the option to wait for the event to be
     /// sent.  Typically, you don't have to...
     /// NOTE: An event is still a [Actor::Request] type.
-    pub fn send_event(&self, event: Request<T>) -> JoinHandle<Result<(), Error>> {
+    pub fn send_event(&self, event: Req) -> JoinHandle<Result<(), Error>> {
         let sender = self.0.clone();
         tokio::spawn(async move {
             sender
@@ -75,19 +65,19 @@ where
 /// clients to send requests to the `Actor`.
 pub struct Handle<T>
 where
-    T: Actor,
+    T: Actor + Send,
     <T as Actor>::Request: Send,
     <T as Actor>::Response: Send,
 {
     /// A clonable `Requestor` for use in sending requests and events to the `Actor`
-    pub requestor: Requestor<T>,
+    pub requestor: Requestor<<T as Actor>::Request, <T as Actor>::Response>,
     /// The tokio JoinHandle to control the spawned task that runs the `Actor`
     pub handle: JoinHandle<()>,
 }
 
 impl<T> Handle<T>
 where
-    T: Actor,
+    T: Actor + Send,
     <T as Actor>::Request: Send,
     <T as Actor>::Response: Send,
 {
@@ -127,6 +117,10 @@ where
     <T as Actor>::Request: Send,
     <T as Actor>::Response: Send,
 {
+    type Request<T> = <T as Actor>::Request;
+    type Response<T> = <T as Actor>::Response;
+    type RequestMessage<T> = (Request<T>, OptionalResponder<Response<T>>);
+
     let (tx, mut rx) = mpsc::channel::<RequestMessage<T>>(buffer);
 
     let handle = tokio::spawn(async move {
