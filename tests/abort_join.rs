@@ -43,8 +43,7 @@ mod abort_join {
         {
             actor_handle.join().await;
 
-            let t = timed_out.lock().unwrap();
-            assert!(!*t);
+            assert!(!*timed_out.lock().unwrap());
         }
 
         timeout_handle.await.unwrap();
