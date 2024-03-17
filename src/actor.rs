@@ -7,7 +7,7 @@ use tokio::{
 
 use crate::error::Error;
 
-/// This is returned by the [Requestor::request] method to indicate the result of the request.
+/// This is returned by the [`Requestor::request`] method to indicate the result of the request.
 pub type RequestResult<Rsp> = Result<Option<Rsp>, Error>;
 
 type OptionalResponder<Rsp> = Option<oneshot::Sender<Option<Rsp>>>;
@@ -31,9 +31,14 @@ where
     Req: Send + 'static,
     Rsp: Send + 'static,
 {
+    /// # Description
     /// Send a request message to the [Actor] instance and expecting a response.
-    /// The return is a [RequestResult] to indicate if request was successfully sent.
-    /// Check the [Error] module for the types of errors that can be thrown.
+    /// The return is a [`RequestResult`] to indicate if request was successfully sent.
+    /// Check the [`Error`] module for the types of errors that can be thrown.
+    ///
+    /// # Errors
+    /// - `Error::RequestError`: Problem with sending the request
+    /// - `Error::ResponseError`: Problem with receiving the response
     pub async fn request(&self, request: Req) -> RequestResult<Rsp> {
         let (rsp_tx, rsp_rx) = oneshot::channel::<Option<Rsp>>();
         self.0
@@ -44,10 +49,10 @@ where
         rsp_rx.await.map_err(|_e| Error::ResponseError)
     }
 
-    /// Sends an event to the [Actor] instance and does not wait for a response.
-    /// `send_event` returns a JoinHandle to allow the caller the option to wait for the event to be
+    /// Sends an event to the [`Actor`] instance and does not wait for a response.
+    /// `send_event` returns a `JoinHandle` to allow the caller the option to wait for the event to be
     /// sent.  Typically, you don't have to...
-    /// NOTE: An event is still a [Actor::Request] type.
+    /// NOTE: An event is still a [`Actor::Request`] type.
     pub fn send_event(&self, event: Req) -> JoinHandle<Result<(), Error>> {
         let sender = self.0.clone();
         tokio::spawn(async move {
@@ -59,7 +64,7 @@ where
     }
 }
 
-/// This is a handle to the spawned [Actor] instance via [run_actor].  This enables the owner of the
+/// This is a handle to the spawned [Actor] instance via [`run_actor`].  This enables the owner of the
 /// `Handle<T>` to abort or wait for the `Actor` spawned instance.
 /// It also contains a `requestor` field that can be cloned and passed around to allow multiple
 /// clients to send requests to the `Actor`.
@@ -111,6 +116,7 @@ pub trait Actor: Send + 'static {
 /// `buffer` is the number of messages that can be kept in the channel.  Typically, you would only
 /// need 1 but if the `Actor` takes a long time to process, a bigger buffer may be needed.
 /// This method returns a [Handle] to control and send requests or events to the `Actor` instance.
+#[allow(clippy::module_name_repetitions)]
 pub fn run_actor<T>(mut actor: T, buffer: usize) -> Handle<T>
 where
     T: Actor + Send,
