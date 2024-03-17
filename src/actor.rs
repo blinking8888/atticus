@@ -22,7 +22,7 @@ where
     Req: Send,
 {
     fn clone(&self) -> Self {
-        Requestor(self.0.clone())
+        Self(self.0.clone())
     }
 }
 
