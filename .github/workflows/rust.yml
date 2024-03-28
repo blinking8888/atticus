@@ -8,12 +8,11 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  MSRV: "1.63"
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4.1.1
     - name: Build
@@ -24,3 +23,14 @@ jobs:
       run: cargo fmt --all --verbose --check
     - name: Run clippy
       run: cargo clippy --all --verbose --tests -- -D warnings
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4.1.1
+    - name: Setup MSRV toolchain
+      run: rustup toolchain install $MSRV
+    - name: Build
+      run: cargo +$MSRV build --all-features --verbose
+    - name: Run tests
+      run: cargo +$MSRV test --all-features --verbose
