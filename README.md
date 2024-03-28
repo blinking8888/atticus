@@ -1,5 +1,10 @@
 # `atticus`: A simple implementation of an actor in `tokio`.
 
+![build](https://img.shields.io/github/actions/workflow/status/blinking8888/atticus/rust.yml)
+![crates.io](https://img.shields.io/crates/v/atticus)
+![Crates.io Downloads (recent)](https://img.shields.io/crates/dr/atticus)
+
+
 Actors provide a way to invoke messages or requests among asynchronous tasks.  This avoids the
 need to use `Arc<Mutex<T>>` instances of an object to be passed around so shared state can be
 made. It makes use of channels to exchange data.
