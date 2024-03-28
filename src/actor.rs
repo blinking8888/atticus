@@ -168,3 +168,7 @@ where
         requestor: Requestor(tx),
     }
 }
+
+/// Export `run` as `run_actor` for backwards compatibility
+#[allow(clippy::module_name_repetitions)]
+pub use run as run_actor;
