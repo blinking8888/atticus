@@ -1,4 +1,5 @@
 use std::fmt;
+use std::ops;
 
 use async_trait::async_trait;
 
@@ -26,6 +27,14 @@ where
 {
     fn clone(&self) -> Self {
         Self(self.0.clone())
+    }
+}
+
+impl<Req, Rsp> ops::Deref for Requestor<Req, Rsp> {
+    type Target = mpsc::Sender<(Req, OptionalResponder<Rsp>)>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
