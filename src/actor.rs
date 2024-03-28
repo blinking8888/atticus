@@ -1,3 +1,5 @@
+use std::fmt;
+
 use async_trait::async_trait;
 
 use tokio::{
@@ -15,6 +17,7 @@ type OptionalResponder<Rsp> = Option<oneshot::Sender<Option<Rsp>>>;
 /// A [Requestor] can be passed around by cloning it so multiple requestors can send
 /// requests to the [Actor]
 #[repr(transparent)]
+#[derive(Debug)]
 pub struct Requestor<Req, Rsp>(mpsc::Sender<(Req, OptionalResponder<Rsp>)>);
 
 impl<Req, Rsp> Clone for Requestor<Req, Rsp>
@@ -78,6 +81,20 @@ where
     pub requestor: Requestor<<T as Actor>::Request, <T as Actor>::Response>,
     /// The tokio JoinHandle to control the spawned task that runs the `Actor`
     pub handle: JoinHandle<()>,
+}
+
+impl<T> fmt::Debug for Handle<T>
+where
+    T: Actor + Send + fmt::Debug,
+    <T as Actor>::Request: Send + fmt::Debug,
+    <T as Actor>::Response: Send + fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Handle")
+            .field("requestor", &self.requestor)
+            .field("handle", &self.handle)
+            .finish()
+    }
 }
 
 impl<T> Handle<T>
