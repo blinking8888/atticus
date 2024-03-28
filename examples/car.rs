@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use atticus::{run_actor, Actor};
+use atticus::{actor, Actor};
 
 pub enum CarRequest {
     Park,
@@ -104,7 +104,7 @@ where
     <T as Actor>::Request: Send + Sync,
     <T as Actor>::Response: Send + Sync,
 {
-    let actor_handle = run_actor(car, 1);
+    let actor_handle = actor::run(car, 1);
     let requestor = actor_handle.requestor;
 
     let response = requestor.request(CarRequest::Park).await.unwrap();

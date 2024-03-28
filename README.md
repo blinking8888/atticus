@@ -23,7 +23,7 @@ There may be future endeavors to make it run in other runtimes as well as `no_st
 Create an actor by implementing the `Actor` trait.
 
 ```rust
-use atticus::{Actor, run_actor};
+use atticus::{Actor, actor};
 use async_trait::async_trait;
 
 struct IntToString;
@@ -40,7 +40,7 @@ impl Actor for IntToString {
 #[tokio::main(flavor="current_thread")]
 async fn main() {
     // Spawn the actor
-    let handle = run_actor(IntToString{}, 1);
+    let handle = actor::run(IntToString{}, 1);
 
     // Send a request to convert 5 to String.
     let response = handle.requestor.request(5).await;

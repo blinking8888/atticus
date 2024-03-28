@@ -76,7 +76,7 @@ where
     }
 }
 
-/// This is a handle to the spawned [Actor] instance via [`run_actor`].  This enables the owner of the
+/// This is a handle to the spawned [Actor] instance via [`actor::run`].  This enables the owner of the
 /// `Handle<T>` to abort or wait for the `Actor` spawned instance.
 /// It also contains a `requestor` field that can be cloned and passed around to allow multiple
 /// clients to send requests to the `Actor`.
@@ -142,8 +142,7 @@ pub trait Actor: Send + 'static {
 /// `buffer` is the number of messages that can be kept in the channel.  Typically, you would only
 /// need 1 but if the `Actor` takes a long time to process, a bigger buffer may be needed.
 /// This method returns a [Handle] to control and send requests or events to the `Actor` instance.
-#[allow(clippy::module_name_repetitions)]
-pub fn run_actor<T>(mut actor: T, buffer: usize) -> Handle<T>
+pub fn run<T>(mut actor: T, buffer: usize) -> Handle<T>
 where
     T: Actor + Send,
     <T as Actor>::Request: Send,
