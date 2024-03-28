@@ -1,13 +1,13 @@
 mod common;
 
 mod request {
-    use atticus::run_actor;
+    use atticus::actor;
 
     use super::common::*;
 
     #[tokio::test]
     async fn echo() {
-        let actor_handle = run_actor(TestActor::default(), 1);
+        let actor_handle = actor::run(TestActor::default(), 1);
         let response = actor_handle
             .requestor
             .request(Message::Echo("ping".to_owned()))
@@ -19,7 +19,7 @@ mod request {
     #[tokio::test]
     async fn add_one() {
         const NUMBER: i32 = 6;
-        let actor_handle = run_actor(TestActor::default(), 1);
+        let actor_handle = actor::run(TestActor::default(), 1);
         let response = actor_handle
             .requestor
             .request(Message::AddOne(NUMBER))
@@ -30,7 +30,7 @@ mod request {
 
     #[tokio::test]
     async fn respond_with_none() {
-        let actor_handle = run_actor(TestActor::default(), 1);
+        let actor_handle = actor::run(TestActor::default(), 1);
         let response = actor_handle
             .requestor
             .request(Message::IgnoreThis)
@@ -42,7 +42,7 @@ mod request {
     #[tokio::test]
     async fn multiple_requestors() {
         const NUMBER: i32 = 6;
-        let actor_handle = run_actor(TestActor::default(), 1);
+        let actor_handle = actor::run(TestActor::default(), 1);
 
         let requestor2 = actor_handle.requestor.clone();
 
@@ -61,7 +61,7 @@ mod request {
 
     #[tokio::test]
     async fn send_an_event() {
-        let actor_handle = run_actor(TestActor::default(), 1);
+        let actor_handle = actor::run(TestActor::default(), 1);
         let event_task_handle = actor_handle.requestor.send_event(Message::IgnoreThis);
 
         // Let's do an await here to make sure that the actor has received the event before

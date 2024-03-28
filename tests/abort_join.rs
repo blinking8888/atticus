@@ -7,13 +7,13 @@ mod abort_join {
         time::Duration,
     };
 
-    use atticus::run_actor;
+    use atticus::actor;
 
     use super::common::*;
 
     #[tokio::test]
     async fn returns_error_on_request() {
-        let actor_handle = run_actor(TestActor::default(), 1);
+        let actor_handle = actor::run(TestActor::default(), 1);
 
         actor_handle.abort();
 
@@ -24,7 +24,7 @@ mod abort_join {
 
     #[tokio::test]
     async fn joins_before_a_timeout() {
-        let actor_handle = run_actor(TestActor::default(), 1);
+        let actor_handle = actor::run(TestActor::default(), 1);
 
         actor_handle.abort();
 

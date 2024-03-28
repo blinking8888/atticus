@@ -25,8 +25,8 @@
 //!
 //! #[tokio::main(flavor="current_thread")]
 //! async fn main() {
-//!    // Spawn using [run_actor]
-//!    let handle = atticus::run_actor(IntToString{}, 1);
+//!    // Spawn using [actor::run]
+//!    let handle = atticus::actor::run(IntToString{}, 1);
 //!
 //!    // Send a request to convert 5 to String.
 //!    let response = handle.requestor.request(5).await;
@@ -46,7 +46,8 @@ pub mod actor;
 /// Defines the error types that this crate provides.
 pub mod error;
 
-pub use actor::{run_actor, Actor, Handle, Requestor};
+pub use actor::run as run_actor;
+pub use actor::{run, Actor, Handle, Requestor};
 pub use error::Error;
 
 #[cfg(test)]
