@@ -48,3 +48,41 @@ pub mod error;
 
 pub use actor::{run_actor, Actor, Requestor};
 pub use error::Error;
+
+#[cfg(test)]
+mod tests {
+    use async_trait::async_trait;
+
+    use crate::actor::*;
+    use crate::Error;
+
+    #[derive(Debug)]
+    struct NormalType;
+
+    #[async_trait]
+    impl Actor for NormalType {
+        type Request = usize;
+        type Response = bool;
+
+        async fn handle(&mut self, _message: Self::Request) -> Option<Self::Response> {
+            unreachable!()
+        }
+    }
+
+    const fn is_send_sync<T: Sized + Send + Sync + Unpin>() {}
+    const fn impls_or_derives_debug<Debug>() {}
+
+    #[test]
+    const fn test_public_types() {
+        is_send_sync::<Requestor<NormalType, NormalType>>();
+        is_send_sync::<Handle<NormalType>>();
+        is_send_sync::<Error>();
+    }
+
+    #[test]
+    const fn test_impls_debug() {
+        impls_or_derives_debug::<Requestor<NormalType, NormalType>>();
+        impls_or_derives_debug::<Handle<NormalType>>();
+        impls_or_derives_debug::<Error>();
+    }
+}
