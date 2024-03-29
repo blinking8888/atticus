@@ -6,7 +6,7 @@ readme = "README.md"
 keywords = [ "async", "actor", "channel", "tokio" ]
 categories = [ "asynchronous", "concurrency"  ]
 license = "MIT OR Apache-2.0"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 rust-version = "1.63"
 

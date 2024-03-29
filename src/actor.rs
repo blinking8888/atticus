@@ -169,5 +169,16 @@ where
     }
 }
 
-/// Export `run` as `run_actor` for backwards compatibility
-pub use run as run_actor;
+/// A step implementation to trigger a deprecation warning when [`run_actor`]
+/// is used.  This basically is just effectively [`actor::run`] inlined.
+#[inline]
+#[allow(clippy::module_name_repetitions)]
+#[deprecated(since = "0.2.2", note = "Use `actor::run` instead")]
+pub fn run_actor<T>(actor: T, buffer: usize) -> Handle<T>
+where
+    T: Actor + Send,
+    <T as Actor>::Request: Send,
+    <T as Actor>::Response: Send,
+{
+    run(actor, buffer)
+}
