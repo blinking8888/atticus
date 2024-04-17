@@ -51,6 +51,9 @@ pub use actor::run_actor;
 pub use actor::{run, Actor, Handle, Requestor};
 pub use error::Error;
 
+/// Re-export tokio symbols that we use
+pub use tokio::{sync::mpsc, task::JoinHandle};
+
 #[cfg(test)]
 mod tests {
     use async_trait::async_trait;
