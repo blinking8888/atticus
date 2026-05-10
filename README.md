@@ -32,8 +32,8 @@ struct IntToString;
 impl Actor for IntToString {
     type Request = i32;
     type Response = String;
-    async fn handle(&mut self, request: Self::Request) -> Option<Self::Response> {
-        Some(request.to_string())
+    async fn handle(&mut self, request: Self::Request) -> Self::Response {
+        request.to_string()
     }
 }
 
@@ -43,10 +43,10 @@ async fn main() {
     let handle = actor::run(IntToString{}, 1);
 
     // Send a request to convert 5 to String.
-    let response = handle.requestor.request(5).await;
+    let response = handle.request(5).await;
 
     assert!(response.is_ok());
-    assert_eq!(response.unwrap(), Some(String::from("5")));
+    assert_eq!(response.unwrap(), String::from("5"));
 }
 
 ```

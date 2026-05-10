@@ -18,8 +18,8 @@
 //! impl Actor for IntToString {
 //!    type Request = i32;
 //!    type Response = String;
-//!    async fn handle(&mut self, request: Self::Request) -> Option<Self::Response> {
-//!        Some(request.to_string())
+//!    async fn handle(&mut self, request: Self::Request) -> Self::Response {
+//!        request.to_string()
 //!    }
 //! }
 //!
@@ -29,10 +29,10 @@
 //!    let handle = atticus::actor::run(IntToString{}, 1);
 //!
 //!    // Send a request to convert 5 to String.
-//!    let response = handle.requestor.request(5).await;
+//!    let response = handle.request(5).await;
 //!
 //!    assert!(response.is_ok());
-//!    assert_eq!(response.unwrap(), Some(String::from("5")));
+//!    assert_eq!(response.unwrap(), String::from("5"));
 //! }
 //!
 //! ```
@@ -46,7 +46,7 @@ pub mod actor;
 /// Defines the error types that this crate provides.
 pub mod error;
 
-pub use actor::{run, Actor, Handle, Requestor};
+pub use actor::{run, Actor, Addr, Handle};
 pub use error::Error;
 
 /// Re-export tokio symbols that we use
@@ -67,8 +67,8 @@ mod tests {
         type Request = usize;
         type Response = bool;
 
-        async fn handle(&mut self, _message: Self::Request) -> Option<Self::Response> {
-            unreachable!()
+        async fn handle(&mut self, _message: Self::Request) -> Self::Response {
+            true
         }
     }
 
@@ -77,14 +77,14 @@ mod tests {
 
     #[test]
     const fn test_public_types() {
-        is_send_sync::<Requestor<NormalType, NormalType>>();
+        is_send_sync::<Addr<NormalType, NormalType>>();
         is_send_sync::<Handle<NormalType>>();
         is_send_sync::<Error>();
     }
 
     #[test]
     const fn test_impls_debug() {
-        impls_or_derives_debug::<Requestor<NormalType, NormalType>>();
+        impls_or_derives_debug::<Addr<NormalType, NormalType>>();
         impls_or_derives_debug::<Handle<NormalType>>();
         impls_or_derives_debug::<Error>();
     }

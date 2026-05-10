@@ -24,8 +24,8 @@ tokio = { version = "1.0", features = ["rt", "test-util", "tokio-macros", "macro
 unsafe_code = "forbid"
 
 [lints.clippy]
-pedantic = "deny"
-nursery = "deny"
+pedantic = { level = "deny", priority = -1 }
+nursery = { level = "deny", priority = -1 }
 unwrap_used = "deny"
 enum_glob_use = "deny"
 module_name_repetitions = "allow"

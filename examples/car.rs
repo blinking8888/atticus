@@ -41,12 +41,12 @@ impl Actor for Sedan {
     type Request = CarRequest;
     type Response = String;
 
-    async fn handle(&mut self, message: Self::Request) -> Option<Self::Response> {
+    async fn handle(&mut self, message: Self::Request) -> Self::Response {
         match message {
-            CarRequest::Park => Some(self.park().await),
-            CarRequest::Drive => Some(self.drive().await),
-            CarRequest::Brake => Some(self.brake().await),
-            CarRequest::Reverse => Some(self.reverse().await),
+            CarRequest::Park => self.park().await,
+            CarRequest::Drive => self.drive().await,
+            CarRequest::Brake => self.brake().await,
+            CarRequest::Reverse => self.reverse().await,
         }
     }
 }
@@ -80,12 +80,12 @@ impl Actor for Suv {
     type Request = CarRequest;
     type Response = String;
 
-    async fn handle(&mut self, message: Self::Request) -> Option<Self::Response> {
+    async fn handle(&mut self, message: Self::Request) -> Self::Response {
         match message {
-            CarRequest::Park => Some(self.park().await),
-            CarRequest::Drive => Some(self.drive().await),
-            CarRequest::Brake => Some(self.brake().await),
-            CarRequest::Reverse => Some(self.reverse().await),
+            CarRequest::Park => self.park().await,
+            CarRequest::Drive => self.drive().await,
+            CarRequest::Brake => self.brake().await,
+            CarRequest::Reverse => self.reverse().await,
         }
     }
 }
@@ -105,19 +105,18 @@ where
     <T as Actor>::Response: Send + Sync,
 {
     let actor_handle = actor::run(car, 1);
-    let requestor = actor_handle.requestor;
 
-    let response = requestor.request(CarRequest::Park).await.unwrap();
-    println!("{}", response.unwrap());
+    let response = actor_handle.request(CarRequest::Park).await.unwrap();
+    println!("{}", response);
 
-    let response = requestor.request(CarRequest::Drive).await.unwrap();
-    println!("{}", response.unwrap());
+    let response = actor_handle.request(CarRequest::Drive).await.unwrap();
+    println!("{}", response);
 
-    let response = requestor.request(CarRequest::Brake).await.unwrap();
-    println!("{}", response.unwrap());
+    let response = actor_handle.request(CarRequest::Brake).await.unwrap();
+    println!("{}", response);
 
-    let response = requestor.request(CarRequest::Reverse).await.unwrap();
-    println!("{}", response.unwrap());
+    let response = actor_handle.request(CarRequest::Reverse).await.unwrap();
+    println!("{}", response);
 }
 
 #[tokio::main(flavor = "current_thread")]

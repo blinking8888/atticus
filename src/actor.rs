@@ -10,18 +10,18 @@ use tokio::{
 
 use crate::error::Error;
 
-/// This is returned by the [`Requestor::request`] method to indicate the result of the request.
-pub type RequestResult<Rsp> = Result<Option<Rsp>, Error>;
+/// This is returned by the [`Addr::request`] method to indicate the result of the request.
+pub type RequestResult<Rsp> = Result<Rsp, Error>;
 
-type OptionalResponder<Rsp> = Option<oneshot::Sender<Option<Rsp>>>;
+type OptionalResponder<Rsp> = Option<oneshot::Sender<Rsp>>;
 
-/// A [Requestor] can be passed around by cloning it so multiple requestors can send
+/// An [Addr] can be passed around by cloning it so multiple requestors can send
 /// requests to the [Actor]
 #[repr(transparent)]
 #[derive(Debug)]
-pub struct Requestor<Req, Rsp>(mpsc::Sender<(Req, OptionalResponder<Rsp>)>);
+pub struct Addr<Req, Rsp>(mpsc::Sender<(Req, OptionalResponder<Rsp>)>);
 
-impl<Req, Rsp> Clone for Requestor<Req, Rsp>
+impl<Req, Rsp> Clone for Addr<Req, Rsp>
 where
     Req: Send,
 {
@@ -30,7 +30,7 @@ where
     }
 }
 
-impl<Req, Rsp> ops::Deref for Requestor<Req, Rsp> {
+impl<Req, Rsp> ops::Deref for Addr<Req, Rsp> {
     type Target = mpsc::Sender<(Req, OptionalResponder<Rsp>)>;
 
     fn deref(&self) -> &Self::Target {
@@ -38,7 +38,7 @@ impl<Req, Rsp> ops::Deref for Requestor<Req, Rsp> {
     }
 }
 
-impl<Req, Rsp> Requestor<Req, Rsp>
+impl<Req, Rsp> Addr<Req, Rsp>
 where
     Req: Send + 'static,
     Rsp: Send + 'static,
@@ -52,7 +52,7 @@ where
     /// - `Error::RequestError`: Problem with sending the request
     /// - `Error::ResponseError`: Problem with receiving the response
     pub async fn request(&self, request: Req) -> RequestResult<Rsp> {
-        let (rsp_tx, rsp_rx) = oneshot::channel::<Option<Rsp>>();
+        let (rsp_tx, rsp_rx) = oneshot::channel::<Rsp>();
         self.0
             .send((request, Some(rsp_tx)))
             .await
@@ -62,23 +62,22 @@ where
     }
 
     /// Sends an event to the [`Actor`] instance and does not wait for a response.
-    /// `send_event` returns a `JoinHandle` to allow the caller the option to wait for the event to be
-    /// sent.  Typically, you don't have to...
     /// NOTE: An event is still a [`Actor::Request`] type.
-    pub fn send_event(&self, event: Req) -> JoinHandle<Result<(), Error>> {
-        let sender = self.0.clone();
-        tokio::spawn(async move {
-            sender
-                .send((event, None))
-                .await
-                .map_err(|_e| Error::EventError)
-        })
+    ///
+    /// # Errors
+    /// - `Error::EventError`: Problem with sending the event
+    pub async fn event(&self, event: Req) -> Result<(), Error> {
+        self.0
+            .send((event, None))
+            .await
+            .map_err(|_e| Error::EventError)
     }
 }
 
-/// This is a handle to the spawned [Actor] instance via [`actor::run`].  This enables the owner of the
-/// `Handle<T>` to abort or wait for the `Actor` spawned instance.
-/// It also contains a `requestor` field that can be cloned and passed around to allow multiple
+/// This is a handle to the spawned [Actor] instance via [`actor::run`].
+///
+/// This enables the owner of the `Handle<T>` to abort or wait for the `Actor` spawned instance.
+/// It also contains an `addr` field that can be cloned and passed around to allow multiple
 /// clients to send requests to the `Actor`.
 pub struct Handle<T>
 where
@@ -86,9 +85,9 @@ where
     <T as Actor>::Request: Send,
     <T as Actor>::Response: Send,
 {
-    /// A clonable `Requestor` for use in sending requests and events to the `Actor`
-    pub requestor: Requestor<<T as Actor>::Request, <T as Actor>::Response>,
-    /// The tokio JoinHandle to control the spawned task that runs the `Actor`
+    /// A clonable `Addr` for use in sending requests and events to the `Actor`
+    pub addr: Addr<<T as Actor>::Request, <T as Actor>::Response>,
+    /// The tokio `JoinHandle` to control the spawned task that runs the `Actor`
     pub handle: JoinHandle<()>,
 }
 
@@ -100,9 +99,22 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Handle")
-            .field("requestor", &self.requestor)
+            .field("addr", &self.addr)
             .field("handle", &self.handle)
             .finish()
+    }
+}
+
+impl<T> ops::Deref for Handle<T>
+where
+    T: Actor + Send,
+    <T as Actor>::Request: Send,
+    <T as Actor>::Response: Send,
+{
+    type Target = Addr<<T as Actor>::Request, <T as Actor>::Response>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.addr
     }
 }
 
@@ -127,17 +139,23 @@ where
 #[async_trait]
 pub trait Actor: Send + 'static {
     /// The type of the request that the `Actor` could process.
-    type Request;
+    type Request: Send;
 
     /// The type of the response that the `Actor` would return
-    type Response;
+    type Response: Send;
 
-    /// Method to handle the `Request` and expects to return an optional response.
-    /// Return None if there really is a reason or data to return the requestor
-    async fn handle(&mut self, message: Self::Request) -> Option<Self::Response>;
+    /// Method to handle the `Request` and returns a response.
+    async fn handle(&mut self, message: Self::Request) -> Self::Response;
+
+    /// Method to handle events.  An event is a request that does not expect a response.
+    /// The default implementation calls `handle` and ignores the response.
+    async fn handle_event(&mut self, message: Self::Request) {
+        let _ = self.handle(message).await;
+    }
 }
 
 /// Spawns an [Actor] instance message handling loop.
+///
 /// It accepts an `actor` that implements an [Actor] trait.
 /// `buffer` is the number of messages that can be kept in the channel.  Typically, you would only
 /// need 1 but if the `Actor` takes a long time to process, a bigger buffer may be needed.
@@ -156,15 +174,17 @@ where
 
     let handle = tokio::spawn(async move {
         while let Some((msg, rsp_tx)) = rx.recv().await {
-            let response = actor.handle(msg).await;
             if let Some(rsp_tx) = rsp_tx {
+                let response = actor.handle(msg).await;
                 let _ = rsp_tx.send(response);
+            } else {
+                actor.handle_event(msg).await;
             }
         }
     });
 
     Handle {
         handle,
-        requestor: Requestor(tx),
+        addr: Addr(tx),
     }
 }
