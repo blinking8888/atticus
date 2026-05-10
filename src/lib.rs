@@ -68,7 +68,7 @@ mod tests {
         type Response = bool;
 
         async fn handle(&mut self, _message: Self::Request) -> Self::Response {
-            unreachable!()
+            true
         }
     }
 

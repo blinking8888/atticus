@@ -63,6 +63,9 @@ where
 
     /// Sends an event to the [`Actor`] instance and does not wait for a response.
     /// NOTE: An event is still a [`Actor::Request`] type.
+    ///
+    /// # Errors
+    /// - `Error::EventError`: Problem with sending the event
     pub async fn event(&self, event: Req) -> Result<(), Error> {
         self.0
             .send((event, None))
@@ -71,8 +74,9 @@ where
     }
 }
 
-/// This is a handle to the spawned [Actor] instance via [`actor::run`].  This enables the owner of the
-/// `Handle<T>` to abort or wait for the `Actor` spawned instance.
+/// This is a handle to the spawned [Actor] instance via [`actor::run`].
+///
+/// This enables the owner of the `Handle<T>` to abort or wait for the `Actor` spawned instance.
 /// It also contains an `addr` field that can be cloned and passed around to allow multiple
 /// clients to send requests to the `Actor`.
 pub struct Handle<T>
@@ -83,7 +87,7 @@ where
 {
     /// A clonable `Addr` for use in sending requests and events to the `Actor`
     pub addr: Addr<<T as Actor>::Request, <T as Actor>::Response>,
-    /// The tokio JoinHandle to control the spawned task that runs the `Actor`
+    /// The tokio `JoinHandle` to control the spawned task that runs the `Actor`
     pub handle: JoinHandle<()>,
 }
 
@@ -151,6 +155,7 @@ pub trait Actor: Send + 'static {
 }
 
 /// Spawns an [Actor] instance message handling loop.
+///
 /// It accepts an `actor` that implements an [Actor] trait.
 /// `buffer` is the number of messages that can be kept in the channel.  Typically, you would only
 /// need 1 but if the `Actor` takes a long time to process, a bigger buffer may be needed.
