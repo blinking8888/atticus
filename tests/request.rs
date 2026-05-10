@@ -19,20 +19,14 @@ mod request {
     async fn add_one() {
         const NUMBER: i32 = 6;
         let actor_handle = actor::run(TestActor::default(), 1);
-        let response = actor_handle
-            .request(Message::AddOne(NUMBER))
-            .await
-            .unwrap();
+        let response = actor_handle.request(Message::AddOne(NUMBER)).await.unwrap();
         assert_eq!(response, ResponseMsg::Number(NUMBER + 1));
     }
 
     #[tokio::test]
     async fn respond_with_none() {
         let actor_handle = actor::run(TestActor::default(), 1);
-        let response = actor_handle
-            .request(Message::IgnoreThis)
-            .await
-            .unwrap();
+        let response = actor_handle.request(Message::IgnoreThis).await.unwrap();
         assert_eq!(response, ResponseMsg::None);
     }
 
@@ -60,10 +54,7 @@ mod request {
         let actor_handle = actor::run(TestActor::default(), 1);
         actor_handle.event(Message::IgnoreThis).await.unwrap();
 
-        let last_request = actor_handle
-            .request(Message::GetLastRequest)
-            .await
-            .unwrap();
+        let last_request = actor_handle.request(Message::GetLastRequest).await.unwrap();
 
         assert_eq!(
             last_request,
