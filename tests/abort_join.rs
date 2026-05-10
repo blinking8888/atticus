@@ -17,7 +17,7 @@ mod abort_join {
 
         actor_handle.abort();
 
-        let response = actor_handle.requestor.request(Message::IgnoreThis).await;
+        let response = actor_handle.request(Message::IgnoreThis).await;
 
         assert!(response.is_err());
     }
